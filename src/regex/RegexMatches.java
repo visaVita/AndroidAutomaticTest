@@ -18,18 +18,18 @@ public class RegexMatches {
     private static int MAX_INPUT_ADRESS = 10;
 
     //控件目录
-    static String all_control = "按钮|图片按钮|单选按钮|复选按钮|展示文本框|可编辑文本框|图片框|进度条";
+    private static String all_control = "按钮|图片按钮|单选按钮|复选按钮|展示文本框|可编辑文本框|图片框|进度条";
 
     //- 正则表达式部分
     //--- App部分
-    private String p_install = "^安装(\\w+)App$";
-    private String p_uninstall = "^卸载(\\w+)App$";
-    private String p_start = "^打开([a-zA-Z0-9]+)(App)$";
+    private String p_install = "^安装(.+)App$";
+    private String p_uninstall = "^卸载(.+)App$";
+    private String p_start = "^打开(.+)App$";
     //--- 动作部分
     //-----点击动作
-    private String p_click = "^单击(\\w+)("+all_control+")$";
-    private String p_db_click = "^双击(\\w+)("+all_control+")$";
-    private String p_long_press = "^长按(\\w+)("+all_control+")$";
+    private String p_click = "^点击(.+)("+all_control+")$";
+    private String p_db_click = "^双击(.+)("+all_control+")$";
+    private String p_long_press = "^长按(.+)("+all_control+")$";
     //-----滑动动作
     private String p_swipe_lr = "^(向左|向右)滑动$";
     private String p_swipe_ud = "^(向上|向下)滑动$";
@@ -39,7 +39,7 @@ public class RegexMatches {
     private String p_zoom_out = "(缩小)";
     //后面应该补充关于缩放程度的处理，现在先搁置
     //-----输入动作
-    private String p_input = "在("+ all_control+")中输入(\\w+)";
+    private String p_input = "^在(.+)("+ all_control+")输入(.+)";
 
     //最终的解析结果
     public String AppName;
@@ -48,10 +48,6 @@ public class RegexMatches {
     public String SwipeTo;
     public String ZoomAt;
     public String Input;
-
-    //executor
-    //TestExecutor executor;
-
 
     public RegexMatches(){
         regStr.add(0,getP_install());
@@ -136,8 +132,6 @@ public class RegexMatches {
                 if (matcher.find()){
                     if (pos <= MAX_APP_ADRESS){
                         AppName = matcher.group(1);           //App名
-                        //executor.initialize(AppName);
-
                         return 1;
                     }else if (pos <= MAX_CLICK_ADRESS){
                         ConName = matcher.group(1);           //控件名（或者控件标志）
@@ -152,14 +146,21 @@ public class RegexMatches {
                         return 4;
                     }else if (pos <= MAX_INPUT_ADRESS){
                         ConName = matcher.group(1);           //控件名
-                        Input   = matcher.group(2);           //输入内容
+                        Input   = matcher.group(3);           //输入内容
                         return 5;
                     }
-
                 }
             }
         }
-        //todo throw an exception
         return 0;
+    }
+
+    public static void main(String[] args){
+        String a = "在搜索昵称可编辑文本框输入362375161";
+
+        Pattern pattern = Pattern.compile("^在(.+)("+ all_control+")输入(.+)");
+        Matcher matcher = pattern.matcher(a);
+        System.out.println(matcher.find());
+        System.out.println(matcher.group(3));
     }
 }

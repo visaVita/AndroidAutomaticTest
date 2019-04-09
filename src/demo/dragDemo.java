@@ -7,6 +7,7 @@ import java.awt.datatransfer.Transferable;
 
 public class dragDemo extends JFrame{
     private static final long serialVersionUID = 1L;
+    private static String a;
     private JTextField field;
     public dragDemo(){
 
@@ -86,7 +87,11 @@ public class dragDemo extends JFrame{
 
     public static void main(String[] args) {
 
-        new dragDemo();
+        //new dragDemo();
+
+        System.out.println(a==null);
+        a = "";
+        System.out.println(a.isEmpty());
     }
 
 }

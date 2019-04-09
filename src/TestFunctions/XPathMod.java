@@ -13,22 +13,21 @@ import java.io.IOException;
 
 public class XPathMod {
     private String myXpathStr;
-    private XPathFactory xPathFactory;
+    private static XPathFactory xPathFactory = XPathFactory.newInstance();
     private XPath xPath;
     private XPathExpression xPathExpr;
 
-    private DocumentBuilderFactory domFactory;
+    private static DocumentBuilderFactory domFactory = DocumentBuilderFactory.newInstance();
     private DocumentBuilder docBuilder;
     private Document doc;
 
     XPathMod(String XmlUri){
-        domFactory = DocumentBuilderFactory.newInstance();
+        System.out.println("经过1");
         domFactory.setNamespaceAware(true);
+        System.out.println("经过2");
         try {
             docBuilder = domFactory.newDocumentBuilder();
             doc = docBuilder.parse(XmlUri);
-
-            xPathFactory = XPathFactory.newInstance();
             xPath = xPathFactory.newXPath();
             // TODO: 2019/3/3 添加解析好的，或者待解析的xml语句（到时候构造函数可能要加参数）
         }catch (ParserConfigurationException e){
@@ -42,7 +41,7 @@ public class XPathMod {
     }
 
     public String generateXpathByText(String name) throws XPathExpressionException {
-        xPathExpr = xPath.compile("//node()[contains(@text," + name + ")]");
+        xPathExpr = xPath.compile("//node()[contains(@text,'" + name + "')]");
         String myText;
         Object result = xPathExpr.evaluate(doc,XPathConstants.NODESET);
         NodeList myNodeList = (NodeList)result;
@@ -50,7 +49,7 @@ public class XPathMod {
             for (int i = 0; i < myNodeList.getLength();i++){
                 myText = myNodeList.item(i).getAttributes().getNamedItem("text").getNodeValue();
                 if (myText.equals(name)){
-                    return "//node()[@text=" + name + ")]";
+                    return "//node()[@text='" + name + "']";
                 }
                 /*todo 这里没考虑如果用户输入的不规范怎么办？只考虑了比如“登录”和“跳过登录”正则匹配相同的问题。
                  *todo 后面再作考虑

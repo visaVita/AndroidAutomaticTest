@@ -10,13 +10,14 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import regex.processMatch;
-import TestFunctions.XPathMod;
 
 import javax.xml.xpath.XPathExpressionException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.time.Duration;
+import java.util.Date;
 
 public class TestExecutor {
     //控件目录
@@ -30,20 +31,19 @@ public class TestExecutor {
     //private static String progressBar = "进度条";
 
 
-    private AppiumDriver mDriver;
+    private AppiumDriver        mDriver;
     private DesiredCapabilities mCap;
-    private WaitOptions mWaitOptions;
-    private String appName;
-    private String appActivity;
-    private String appPackage;
-    private String device;
-    private String serverURL = "http://127.0.0.1:4723/wd/hub";
-    final private static String appLoc= "G:\\Android_Automatic_Testing\\test app\\";
+    private WaitOptions         mWaitOptions;
+    private String              appName;
+    private String              appActivity;
+    private String              appPackage;
+    private String              device;
+    private String              serverURL = "http://127.1.1.1:4723/wd/hub";
+    private final static String appLoc = "G:\\Android_Automatic_Testing\\test app\\";
+    private final static String xmlLoc = "G:\\Android_Automatic_Testing\\screen_dump\\";
 
-    private static Process adbProcess;
-
-    private processMatch process;
-    private XPathMod XPathMethod;
+    private processMatch        process;
+    private XPathMod            XPathMethod;
 
     public TestExecutor(){
         this.mCap = new DesiredCapabilities();
@@ -65,20 +65,24 @@ public class TestExecutor {
         device      = process.getAdb_devices_str();
 
         mCap.setCapability("deviceName",device);
-        mCap.setCapability("platformVersion","8.0");
-        mCap.setCapability("automationName","Appium");
+        mCap.setCapability("platformVersion","8.1.0");
+
+        mCap.setCapability("platformName","Android");
         mCap.setCapability("app",appLoc+appName+".apk");
         mCap.setCapability("appPackage",appPackage);
         mCap.setCapability("appActivity",appActivity);
+        mCap.setCapability("deviceReadyTimeout",60);
+        mCap.setCapability("unicodeKeyboard",true);
+        mCap.setCapability("resetKeyboard",true);
 
         try{
-            this.mDriver = new AndroidDriver(new URL(serverURL),mCap);
+            this.mDriver = new AndroidDriver<>(new URL(serverURL),mCap);
         }catch (MalformedURLException e){
             //todo
         }
 
         this.mWaitOptions = new WaitOptions().withDuration(Duration.ofSeconds(1));
-        this.XPathMethod = new XPathMod("");
+        //this.XPathMethod = new XPathMod("");
         //todo
     }
 
@@ -101,16 +105,27 @@ public class TestExecutor {
     }
 
     public WebElement Find(String controlName, String LocType) throws XPathExpressionException {
-
+        Date date = new Date();
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        String fileName = format.format(date);
+        processMatch process = new processMatch();
+        try {
+            process.getScreenDump(fileName);
+            Thread.sleep(2000);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         if (LocType.toLowerCase().equals("id")){
-            return mDriver.findElement(By.id(controlName));
+            return mDriver.findElementById(controlName);
         }else if (LocType.toLowerCase().equals("xpath")){
-            String xpath = XPathMethod.generateXpathByText(controlName);
-            return mDriver.findElementByXPath(xpath);
+            //String xpath = new XPathMod(xmlLoc+currentContext+".xml").generateXpathByText(controlName);
+            return mDriver.findElementByXPath("//node()[contains(@text,'" + controlName + "')]");
         }
         //todo
         else if(LocType.toLowerCase().equals("desc|text")){
-            String xpath = XPathMethod.generateXpathByContentDesc(controlName);
+            String xpath = new XPathMod(xmlLoc+fileName+".xml").generateXpathByContentDesc(controlName);
             return mDriver.findElementByXPath(xpath);
         }
         else {

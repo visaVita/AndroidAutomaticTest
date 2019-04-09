@@ -1,15 +1,15 @@
 package GUI;
 
+import TestFunctions.ReadTestCase;
+
 import javax.swing.*;
-import javax.swing.plaf.basic.BasicOptionPaneUI;
-import javax.swing.plaf.basic.BasicOptionPaneUI.ButtonActionListener;
 import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-public class MainFrame extends JFrame {
+public class MainFrame extends JFrame implements FinishCallback,CaseInvalidateCallback{
     private JLabel      TestCaseLabel;
     private JLabel      TestAppLabel;
     private JLabel      ImgLabel;
@@ -26,7 +26,22 @@ public class MainFrame extends JFrame {
     private String      AppPath;
     private String      CaseName;
     private String      CasePath;
-    public MainFrame(){
+
+    private static MainFrame mainFrame = null;
+
+    private MainFrame(){
+        CreatePanel();
+    }
+
+    public static MainFrame getInstance(){
+        if (mainFrame == null){
+            mainFrame = new MainFrame();
+        }
+        return mainFrame;
+    }
+
+    private void CreatePanel(){
+
         this.setTitle("测试系统");
         this.setSize(800,600);
         this.setLayout(new BorderLayout());
@@ -37,7 +52,7 @@ public class MainFrame extends JFrame {
         ImgLabel = new JLabel();
         ImgLabel.setPreferredSize(new Dimension(800,150));
         //ImgLabel.setBorder(new RoundBorder(new Color(192,192,192),1,true));
-        ImgLabel.setIcon(new ImageIcon("src\\res\\water.jpg"));
+        ImgLabel.setIcon(new ImageIcon("res\\water.jpg"));
 
         LogField = new JTextArea("日志区域\n\r");
         LogField.setEditable(false);
@@ -45,31 +60,13 @@ public class MainFrame extends JFrame {
         LogField.setFont(new Font("宋体",Font.PLAIN,18));
         LogField.setBorder(new RoundBorder(new Color(192,192,192),1,false));
         LogField.setBounds(0,0,800,300);
-        CreatePanel();
 
-        LogScrollPane = new JScrollPane();
 
-        LogScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        LogScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        LogScrollPane.setPreferredSize(new Dimension(800,300));
-
-        LogScrollPane.setViewportView(LogField);
-
-        this.add(ImgLabel,BorderLayout.NORTH);
-        this.add(BtnPanel,BorderLayout.CENTER);
-        this.add(LogScrollPane,BorderLayout.SOUTH);
-
-        this.setVisible(true);
-
-    }
-
-    private void CreatePanel(){
-
-        ImageIcon CaseIcon     = new ImageIcon("src\\res\\plus-circle-green.png");
-        ImageIcon AppIcon      = new ImageIcon("src\\res\\plus-circle.png");
-        ImageIcon ResIcon      = new ImageIcon("src\\res\\search.png");
-        ImageIcon FinIcon      = new ImageIcon("src\\res\\play-circle.png");
-        ImageIcon RollBackIcon = new ImageIcon("src\\res\\close-circle.png");
+        ImageIcon CaseIcon     = new ImageIcon("res\\plus-circle-green.png");
+        ImageIcon AppIcon      = new ImageIcon("res\\plus-circle.png");
+        ImageIcon ResIcon      = new ImageIcon("res\\search.png");
+        ImageIcon FinIcon      = new ImageIcon("res\\play-circle.png");
+        ImageIcon RollBackIcon = new ImageIcon("res\\close-circle.png");
 
         TestCaseLabel = new JLabel(CaseIcon);
         TestAppLabel  = new JLabel(AppIcon);
@@ -109,6 +106,7 @@ public class MainFrame extends JFrame {
         FinBtn.addActionListener(new FinBtnListener());
         RollBackBtn.addActionListener(new RollBackBtnListener());
 
+        ResBtn.setEnabled(false);
         InitAdapter();
 
         BtnPanel = new JPanel();
@@ -121,6 +119,20 @@ public class MainFrame extends JFrame {
         BtnPanel.add(RollBackBtn);
         BtnPanel.add(ResBtn);
 
+
+        LogScrollPane = new JScrollPane();
+
+        LogScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        LogScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        LogScrollPane.setPreferredSize(new Dimension(800,300));
+
+        LogScrollPane.setViewportView(LogField);
+
+        this.add(ImgLabel,BorderLayout.NORTH);
+        this.add(BtnPanel,BorderLayout.CENTER);
+        this.add(LogScrollPane,BorderLayout.SOUTH);
+
+        this.setVisible(true);
     }
 
     private void InitAdapter(){
@@ -131,7 +143,6 @@ public class MainFrame extends JFrame {
                     Object o = t.getTransferData(DataFlavor.javaFileListFlavor);
 
                     String filepath = o.toString();
-                    System.out.println(filepath);
                     if (filepath.startsWith("[")) {
                         filepath = filepath.substring(1);
                     }
@@ -142,10 +153,10 @@ public class MainFrame extends JFrame {
                         CasePath = filepath;
                         CaseName = filepath.substring(filepath.lastIndexOf("\\")+1,filepath.length());
                         System.out.println(AppPath);
-                        updateTextArea("添加用例："+CaseName);
+                        setMsg("添加用例："+CaseName);
                         return true;
                     }else {
-                        updateTextArea("不支持的文件类型，需要.xls或者.xlsx文件");
+                        setMsg("不支持的文件类型，需要.xls或者.xlsx文件");
                         return false;
                     }
                 }
@@ -172,7 +183,7 @@ public class MainFrame extends JFrame {
                     Object o = t.getTransferData(DataFlavor.javaFileListFlavor);
 
                     String filepath = o.toString();
-                    System.out.println(filepath);
+
                     if (filepath.startsWith("[")) {
                         filepath = filepath.substring(1);
                     }
@@ -184,10 +195,10 @@ public class MainFrame extends JFrame {
                         AppName = filepath.substring(filepath.lastIndexOf("\\")+1,filepath.length());
                         System.out.println(AppPath);
 
-                        updateTextArea("添加App："+AppName);
+                        setMsg("添加App："+AppName);
                         return true;
                     }else {
-                        updateTextArea("不支持的文件类型,需要.apk文件");
+                        setMsg("不支持的文件类型,需要.apk文件");
                         return false;
                     }
                 }
@@ -209,15 +220,22 @@ public class MainFrame extends JFrame {
         });
     }
 
-    public void updateTextArea(String s){
-        LogField.append(s+"\n\r");
+    public void setMsg(String msg) {
+        LogField.append(msg+"\n\r");
+        LogField.setCaretPosition(LogField.getDocument().getLength());
+    }
+
+    public void setRawMsg(String msg){
+        LogField.append(msg);
         LogField.setCaretPosition(LogField.getDocument().getLength());
     }
 
     private class ResBtnListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            //todo
+            //todo 这里计划是直接判断测试报告是否生成，已经生成则直接打开
+
+
         }
     }
 
@@ -225,7 +243,18 @@ public class MainFrame extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            //先判断配置是否已经完成，在判断是否合法
+            //判断配置是否已经完成
+            if(AppName==null||AppName.isEmpty()){
+                setMsg("未配置app信息，请拖动待测app安装包到相应位置");
+                return;
+            }
+            if (CaseName==null||CaseName.isEmpty()){
+                setMsg("未配置用例信息，请拖动用例文件到相应位置");
+                return;
+            }
+            ReadTestCase testCase = new ReadTestCase(getInstance(),AppName,AppPath,CasePath);
+            Thread readThread = new Thread(testCase,"读线程1");
+            readThread.start();
         }
     }
 
@@ -233,16 +262,22 @@ public class MainFrame extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            AppName  = null;
-            AppPath  = null;
-            CaseName = null;
-            CasePath = null;
-            updateTextArea("配置已经清空\n\r");
+            AppName  = "";
+            AppPath  = "";
+            CaseName = "";
+            CasePath = "";
+            setMsg("配置已经清空\n\r");
         }
     }
 
-    public static void main(String[] args){
-        new MainFrame();
+    @Override
+    public void FinishCallback() {
+        setMsg("测试完成，正在生成测试报告");
+        this.ResBtn.setEnabled(true);
     }
 
+    @Override
+    public void CaseInvalidateCallback(String err) {
+        setMsg("用例文件无效："+err);
+    }
 }

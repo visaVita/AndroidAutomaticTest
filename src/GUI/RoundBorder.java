@@ -5,7 +5,7 @@ import javax.swing.border.LineBorder;
 import java.awt.*;
 
 public class RoundBorder extends LineBorder {
-    RoundBorder(Color color, int thickness, boolean roundedCorners) {
+     RoundBorder(Color color, int thickness, boolean roundedCorners) {
         super(color, thickness, roundedCorners);
     }
 
