@@ -88,14 +88,12 @@ public class UiAutomationViewer extends JFrame implements TreeSelectionListener 
 
         Blank_panel = new JPanel();
         Blank_panel.setPreferredSize(new Dimension(500,500));
-        Blank_panel.add(new JLabel("空白"));
         Blank_panel.setOpaque(false);
         Blank_panel.setBounds(0,0,500,500);
 
         Dump_panel = new ImgPanel();
         //Dump_panel.setPreferredSize(new Dimension(500,500));
         Dump_panel.setBounds(0,0,500,500);
-
 
         /*
         TreePane = new JLayeredPane();
@@ -114,7 +112,6 @@ public class UiAutomationViewer extends JFrame implements TreeSelectionListener 
         ShowDump.add(Blank_panel,new Integer(200));
         ShowDump.add(Dump_panel,new Integer(100));
 
-
         CasePane = new JScrollPane(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         CasePane.setPreferredSize(new Dimension(800,200));
         CasePane.setViewportView(new JLabel("用例"));
@@ -129,10 +126,6 @@ public class UiAutomationViewer extends JFrame implements TreeSelectionListener 
         this.add(NorthPanel,BorderLayout.CENTER);
         this.add(CasePane,BorderLayout.SOUTH);
         this.setVisible(true);
-    }
-
-    private void CreatePanel(int width,int height){
-
     }
 
     private void showScreenCap(){
@@ -186,7 +179,12 @@ public class UiAutomationViewer extends JFrame implements TreeSelectionListener 
             return 0.0;
         double w = Double.parseDouble(dim[0]);
         double h = Double.parseDouble(dim[1]);
-        double width = w*(500/h);
+        double width;
+        if (h>w)
+            width = w*(500/h);
+        else
+            width = 500;
+        //todo 这里应该返回一个二元组，表示宽高，以解决横屏时截图显示不正确的问题
         return width;
     }
 
@@ -217,35 +215,20 @@ public class UiAutomationViewer extends JFrame implements TreeSelectionListener 
     }
 
     private void generateTree(Element e,DefaultMutableTreeNode parentNode){
-        String TreeNodeName;
-        //当前节点的名称、文本内容和属性
-        //System.out.println("当前节点名称："+e.getName());//当前节点名称
-        //System.out.println("当前节点的内容："+e.getTextTrim());//当前节点名称
         List<Attribute> listAttr=e.attributes();//当前节点的所有属性的list
 
-        String ClassName = e.attributeValue("class");
-        String index     = e.attributeValue("index");
-        String bounds    = e.attributeValue("bounds");
-        if (index!=null)
-            TreeNodeName = "("+index+")"+ClassName+bounds;
-        else
-            TreeNodeName = "";
-
-        MyTreeNode TreeNode = new MyTreeNode(TreeNodeName);
-        Vector CellsVector = new Vector();
+        MyTreeNode TreeNode = new MyTreeNode();
+        Map<String,String> attributes = new LinkedHashMap<>();
 
         //Map<String,String> attrMap = new HashMap<String,String>();
         for(Attribute attr:listAttr){//遍历当前节点的所有属性
             String name=attr.getName();//属性名称
             String value=attr.getValue();//属性的值
-            Vector<String> v = new Vector<>();
-            v.add(name);
-            v.add(value);
-            CellsVector.add(v);
+            TreeNode.addAttr(name,value);
             //attrMap.put(name,value);
         }
-        TreeNode.setUserMsg(CellsVector);
-
+        //添加完属性后，必须执行setDisplayName()方法
+        TreeNode.setDisplayName();
         parentNode.add(TreeNode);
 
         //递归遍历当前节点所有的子节点
@@ -258,6 +241,33 @@ public class UiAutomationViewer extends JFrame implements TreeSelectionListener 
 
     }
 
+    private void visitAllNodes(MyTreeNode node,int[] d,Point point){
+        if (node.getChildCount()>0){
+            for (Enumeration e = node.children();e.hasMoreElements();){
+                MyTreeNode n = (MyTreeNode) e.nextElement();
+                if (n.hasBound){
+                    if (n.x<point.x){
+
+                    }
+                }
+                visitAllNodes(n,d,point);
+            }
+        }
+    }
+
+    private MyTreeNode FindNode(MyTreeNode node,Point point){
+        if (node.getChildCount()>0){
+            for (Enumeration e = node.children();e.hasMoreElements();){
+                MyTreeNode n = (MyTreeNode) e.nextElement();
+                //if (n.hasBound){
+                //    return n;
+                //}
+                FindNode(n,point);
+            }
+        }
+        return null;
+    }
+
     public static void main(String[] args){
         UiAutomationViewer a = new UiAutomationViewer();
 
@@ -267,8 +277,10 @@ public class UiAutomationViewer extends JFrame implements TreeSelectionListener 
     public void valueChanged(TreeSelectionEvent e) {
         if (e.getSource()==cTree){
             MyTreeNode node = (MyTreeNode) cTree.getLastSelectedPathComponent();
-            Vector v = node.getUserMsg();
-            aTable = new JTable(v,headVector);
+
+
+            aTable = new JTable(new MyTableModel((LinkedHashMap<String, String>) node.getmAttributes()));
+
             aTable.setRowHeight(30);
             aTable.getColumnModel().getColumn(0).setPreferredWidth(100);
             aTable.getColumnModel().getColumn(1).setPreferredWidth(250);
@@ -325,7 +337,10 @@ public class UiAutomationViewer extends JFrame implements TreeSelectionListener 
 
         @Override
         public void mouseEntered(MouseEvent e) {
+            MyTreeNode treeNode = (MyTreeNode)cTree.getModel().getRoot();
 
+            FindNode(treeNode,e.getPoint());
+            //if (e.getX())
         }
 
         @Override

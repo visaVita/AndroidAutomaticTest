@@ -37,4 +37,24 @@ public class ImgPanel extends JPanel {
             image.paintIcon(this, g, (500-width)/2, 0);
         }
     }
+
+    protected void paintDashedRect(int x,int y, int width, int height, Graphics g){
+        Graphics2D g2d = (Graphics2D)g.create();
+        g2d.setColor(Color.RED);
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        Stroke dash = new BasicStroke(2,BasicStroke.CAP_BUTT,BasicStroke.JOIN_MITER,3,new float[]{15,2,8,2},0);
+        g2d.setStroke(dash);
+        g2d.drawRect(x, y, width, height);
+        g2d.dispose();
+        //g2d.setColor(new Color(255,255,255,0));
+    }
+
+    protected void paintRect(int x,int y, int width,int height,Graphics g){
+        Graphics2D g2d = (Graphics2D)g.create();
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2d.setColor(Color.RED);
+        g2d.drawRect(x, y, width, height);
+        g2d.dispose();
+    }
+
 }
